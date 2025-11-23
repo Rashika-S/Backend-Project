@@ -24,9 +24,10 @@ This project bridges the gap between confusion and clarity in academic decision-
 
 ### Frontend
 
-* HTML5, CSS3, JavaScript
-* React.js (optional upgrade)
-* Tailwind CSS / Bootstrap for styling
+* HTML5
+* CSS
+* JavaScript
+
 
 ### Backend
 
