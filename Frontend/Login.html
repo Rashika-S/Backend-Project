@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - MinorMap+</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Login to MinorMap+</h1>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email" required aria-label="Email">
+      <input type="password" id="password" placeholder="Password" required aria-label="Password">
+      <button type="submit" id="submitBtn">Login</button>
+    </form>
+    <p id="message"></p>
+    <p>Don't have an account? <a href="Register.html">Register here</a></p>
+  </div>
+  <script>
+    const form = document.getElementById('loginForm');
+    const message = document.getElementById('message');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<div class="loading"></div> Logging in...';
+
+      const data = {
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+      };
+
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (res.ok) {
+          localStorage.setItem('token', result.token);
+          localStorage.setItem('user', JSON.stringify(result.user));
+          message.className = 'success';
+          message.textContent = 'Login successful! Redirecting...';
+          setTimeout(() => window.location.href = 'SelectMinor.html', 2000);
+        } else {
+          throw new Error(result.error || 'Login failed');
+        }
+      } catch (err) {
+        message.className = 'error';
+        message.textContent = err.message;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Login';
+      }
+    });
+  </script>
+</body>
+</html>

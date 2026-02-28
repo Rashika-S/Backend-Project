@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Register - MinorMap+</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Register for MinorMap+</h1>
+    <form id="registerForm">
+      <input type="text" id="name" placeholder="Full Name" required aria-label="Full Name">
+      <input type="email" id="email" placeholder="Email" required aria-label="Email">
+      <input type="password" id="password" placeholder="Password" required aria-label="Password">
+      <button type="submit" id="submitBtn">Register</button>
+    </form>
+    <p id="message"></p>
+    <p>Already have an account? <a href="Login.html">Login here</a></p>
+  </div>
+  <script>
+    const form = document.getElementById('registerForm');
+    const message = document.getElementById('message');
+    const submitBtn = document.getElementById('submitBtn');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<div class="loading"></div> Registering...';
+
+      const data = {
+        name: document.getElementById('name').value.trim(),
+        email: document.getElementById('email').value.trim(),
+        password: document.getElementById('password').value
+      };
+
+      try {
+        const res = await fetch('http://localhost:5000/api/auth/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data)
+        });
+        const result = await res.json();
+        if (res.ok) {
+          message.className = 'success';
+          message.textContent = 'Registration successful! Redirecting to login...';
+          setTimeout(() => window.location.href = 'Login.html', 2000);
+        } else {
+          throw new Error(result.error || 'Registration failed');
+        }
+      } catch (err) {
+        message.className = 'error';
+        message.textContent = err.message;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Register';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Select Minor - MinorMap+</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Select Your Minor Interest</h1>
+    <select id="minorSelect" required aria-label="Select Minor">
+      <option value="">Choose a minor...</option>
+    </select>
+    <button id="startBtn" onclick="startQuiz()">Start Quiz</button>
+    <p id="message"></p>
+  </div>
+  <script>
+    const token = localStorage.getItem('token');
+    const select = document.getElementById('minorSelect');
+    const message = document.getElementById('message');
+
+    if (!token) {
+      window.location.href = 'Login.html';
+    }
+
+    async function loadMinors() {
+      try {
+        const res = await fetch('http://localhost:5000/api/admin/minors', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const minors = await res.json();
+        if (res.ok) {
+          minors.forEach(m => {
+            select.innerHTML += `<option value="${m._id}">${m.name} - ${m.description}</option>`;
+          });
+        } else {
+          throw new Error('Failed to load minors');
+        }
+      } catch (err) {
+        message.className = 'error';
+        message.textContent = err.message;
+      }
+    }
+
+    function startQuiz() {
+      if (!select.value) {
+        message.className = 'error';
+        message.textContent = 'Please select a minor.';
+        return;
+      }
+      localStorage.setItem('selectedMinor', select.value);
+      window.location.href = 'Quiz.html';
+    }
+
+    loadMinors();
+  </script>
+</body>
+</html>

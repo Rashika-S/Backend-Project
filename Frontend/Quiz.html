@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quiz - MinorMap+</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Take the Minor Eligibility Quiz</h1>
+    <div id="questions"></div>
+    <button id="submitBtn" onclick="submitQuiz()">Submit Quiz</button>
+    <p id="message"></p>
+  </div>
+  <script>
+    const token = localStorage.getItem('token');
+    const questionsDiv = document.getElementById('questions');
+    const message = document.getElementById('message');
+    const submitBtn = document.getElementById('submitBtn');
+    let questions = [];
+
+    if (!token) {
+      window.location.href = 'Login.html';
+    }
+
+    async function loadQuestions() {
+      try {
+        const res = await fetch('http://localhost:5000/api/test/questions', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        questions = await res.json();
+        if (res.ok) {
+          questions.forEach((q, i) => {
+            questionsDiv.innerHTML += `
+              <div class="quiz-question">
+                <p>${i + 1}. ${q.text}</p>
+                <input type="number" id="q${q._id}" min="1" max="5" required aria-label="Rating for question ${i + 1}">
+              </div>
+            `;
+          });
+        } else {
+          throw new Error('Failed to load questions');
+        }
+      } catch (err) {
+        message.className = 'error';
+        message.textContent = err.message;
+      }
+    }
+
+    async function submitQuiz() {
+      const answers = questions.map(q => ({
+        questionId: q._id,
+        value: +document.getElementById(`q${q._id}`).value
+      })).filter(a => a.value >= 1 && a.value <= 5);
+
+      if (answers.length !== questions.length) {
+        message.className = 'error';
+        message.textContent = 'Please answer all questions (1-5).';
+        return;
+      }
+
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<div class="loading"></div> Submitting...';
+
+      try {
+        const res = await fetch('http://localhost:5000/api/test/submit', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+          body: JSON.stringify({ answers })
+        });
+        const result = await res.json();
+        if (res.ok) {
+          localStorage.setItem('recommendations', JSON.stringify(result.recommendations));
+          window.location.href = 'Results.html';
+        } else {
+          throw new Error(result.error || 'Submission failed');
+        }
+      } catch (err) {
+        message.className = 'error';
+        message.textContent = err.message;
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Submit Quiz';
+      }
+    }
+
+    loadQuestions();
+  </script>
+</body>
+</html>

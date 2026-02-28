@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Results - MinorMap+</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <h1>Your Minor Recommendations</h1>
+    <ul id="results" class="results-list"></ul>
+    <button onclick="window.location.href='SelectMinor.html'">Take Another Quiz</button>
+    <button onclick="logout()">Logout</button>
+  </div>
+  <script>
+    const token = localStorage.getItem('token');
+    const resultsUl = document.getElementById('results');
+
+    if (!token) {
+      window.location.href = 'Login.html';
+    }
+
+    async function loadResults() {
+      try {
+        const user = JSON.parse(localStorage.getItem('user'));
+        const res = await fetch(`http://localhost:5000/api/test/recommendations/${user.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const data = await res.json();
+        if (res.ok && data.rankedMinors) {
+          data.rankedMinors.forEach(r => {
+            resultsUl.innerHTML += `<li><strong>${r.minorId}</strong>: ${r.category} (Score: ${r.score.toFixed(2)})</li>`;
+          });
+        } else {
+          resultsUl.innerHTML = '<li>No recommendations found. Try again.</li>';
+        }
+      } catch (err) {
+        resultsUl.innerHTML = `<li class="error">Error loading results: ${err.message}</li>`;
+      }
+    }
+
+    function logout() {
+      localStorage.clear();
+      window.location.href = 'Login.html';
+    }
+
+    loadResults();
+  </script>
+</body>
+</html>
